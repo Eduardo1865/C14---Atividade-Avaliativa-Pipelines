@@ -5,7 +5,7 @@ on:
     branches: ["main", "develop"]
   pull_request:
     branches: ["main"]
-  workflow_dispatch: # Permite execução manual
+  workflow_dispatch: 
 
 env:
   PYTHON_VERSION: "3.10"
@@ -95,3 +95,60 @@ jobs:
           if [ -f test-reports/coverage.xml ]; then
             echo " **Coverage Report disponível nos artefatos**" >> $GITHUB_STEP_SUMMARY
           fi
+ 
+  build:
+    name: " Build & Package"
+    runs-on: ubuntu-latest
+    steps:
+      - name:  Checkout repository
+        uses: actions/checkout@v4
+      - name:  Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name:  Install build dependencies
+        run: |
+          echo " Instalando software necessário para build..."
+          python -m pip install --upgrade pip
+          pip install build wheel setuptools
+          if [ -f requirements.txt ]; then 
+            pip install -r requirements.txt
+          else
+            pip install pandas
+          fi
+      - name:  Make build script executable
+        run: |
+          chmod +x scripts/build_package.py
+      - name:  Build application package
+        run: |
+          echo " Executando script de empacotamento..."
+          python scripts/build_package.py
+      - name:  Generate build summary
+        run: |
+          echo "##  Build Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Status:**  Concluída com sucesso" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo " **Artefatos gerados:**" >> $GITHUB_STEP_SUMMARY
+          for file in crocodile-analyzer-*.{zip,tar.gz}; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              echo "- $file ($size)" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo " **Conteúdo do pacote:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Aplicação principal (crocodile_analyzer_terminal.py)" >> $GITHUB_STEP_SUMMARY
+          echo "- Dataset (crocodile_dataset.csv)" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependências (requirements.txt)" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentação (README.md, INSTALL.md)" >> $GITHUB_STEP_SUMMARY
+          echo "- Informações da build (build-info.json)" >> $GITHUB_STEP_SUMMARY
+      - name:  Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-packages
+          path: |
+            crocodile-analyzer-*.zip
+            crocodile-analyzer-*.tar.gz
+            dist/
+          retention-days: 90
