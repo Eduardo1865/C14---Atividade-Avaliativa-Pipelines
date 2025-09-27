@@ -100,6 +100,116 @@ class TestCrocodileAnalyzer:
       
         assert "20.0%" in captured.out 
         assert "40.0%" in captured.out  
+    
+    def test_8_sex_distribution_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_8_sex_distribution()
+        
+        captured = capsys.readouterr()
+        assert "DISTRIBUIÇÃO POR SEXO" in captured.out
+        assert "Male" in captured.out
+        assert "Unknown" in captured.out
+        assert "%" in captured.out
+        
+        # Verificar se as contagens estão corretas (3 machos, 2 desconhecidos)
+        assert "60.0%" in captured.out  # Male
+        assert "40.0%" in captured.out  # Unknown
+    
+    def test_9_country_analysis_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_9_country_analysis()
+        
+        captured = capsys.readouterr()
+        assert "OBSERVAÇÕES POR PAÍS/REGIÃO" in captured.out
+        assert "Venezuela" in captured.out
+        assert "Belize" in captured.out
+        assert "Mexico" in captured.out
+        assert "India" in captured.out
+        assert "%" in captured.out
+        
+        # Verificar contagens (Venezuela: 2, outros: 1 cada)
+        assert "40.0%" in captured.out  # Venezuela
+        assert "20.0%" in captured.out  # Outros países
+    
+    def test_10_largest_specimens_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_10_largest_specimens()
+        
+        captured = capsys.readouterr()
+        assert "MAIORES ESPÉCIMES (COMPRIMENTO)" in captured.out
+        assert "American Crocodile" in captured.out
+        assert "4.09m" in captured.out
+        assert "Venezuela" in captured.out
+        
+        # Verificar ordenação (o maior deve aparecer primeiro)
+        lines = captured.out.split('\n')
+        first_specimen_line = next(line for line in lines if "1." in line and "m |" in line)
+        assert "4.09" in first_specimen_line
+    
+    def test_11_heaviest_specimens_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_11_heaviest_specimens()
+        
+        captured = capsys.readouterr()
+        assert "ESPÉCIMES MAIS PESADOS" in captured.out
+        assert "American Crocodile" in captured.out
+        assert "334.5kg" in captured.out
+        assert "Venezuela" in captured.out
+        
+        # Verificar ordenação (o mais pesado deve aparecer primeiro)
+        lines = captured.out.split('\n')
+        first_specimen_line = next(line for line in lines if "1." in line and "kg |" in line)
+        assert "334.5" in first_specimen_line
+    
+    def test_12_size_categories_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_12_size_categories()
+        
+        captured = capsys.readouterr()
+        assert "CATEGORIZAÇÃO POR TAMANHO" in captured.out
+        assert "Pequeno (<1.5m)" in captured.out
+        assert "Médio (1.5-3m)" in captured.out
+        assert "Grande (3-4.5m)" in captured.out
+        assert "%" in captured.out
+        
+        # Verificar categorias baseadas nos dados de teste
+        # 1.08m -> Pequeno, 1.9m e 2.42m -> Médio, 3.75m e 4.09m -> Grande
+        assert "20.0%" in captured.out  # 1 Pequeno
+        assert "40.0%" in captured.out  # 2 Médios
+        # 2 Grandes também serão 40%
+    
+    def test_13_yearly_observations_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_13_yearly_observations()
+        
+        captured = capsys.readouterr()
+        assert "OBSERVAÇÕES POR ANO" in captured.out
+        assert "observações" in captured.out
+        
+        # Verificar anos presentes nos dados de teste
+        assert "2010" in captured.out
+        assert "2015" in captured.out
+        assert "2018" in captured.out
+        assert "2019" in captured.out
+    
+    def test_14_correlation_analysis_function(self, sample_csv_file, capsys):
+        analyzer = CrocodileAnalyzer(sample_csv_file)
+        analyzer.function_14_correlation_analysis()
+        
+        captured = capsys.readouterr()
+        assert "CORRELAÇÃO PESO vs COMPRIMENTO" in captured.out
+        assert "Coeficiente de correlação de Pearson:" in captured.out
+        assert "Dados válidos para análise: 5" in captured.out
+        
+        # Como temos dados válidos, deve mostrar uma correlação
+        correlation_patterns = [
+            "Correlação muito forte",
+            "Correlação forte",
+            "Correlação moderada", 
+            "Correlação fraca",
+            "Correlação muito fraca"
+        ]
+        assert any(pattern in captured.out for pattern in correlation_patterns)
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])

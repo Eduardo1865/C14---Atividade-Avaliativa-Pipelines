@@ -102,6 +102,108 @@ class CrocodileAnalyzer:
         for age, count in age_dist.items():
             percentage = (count / len(self.data)) * 100
             print(f"{age:<15} | {count:3d} ({percentage:5.1f}%)")
+            
+    def function_8_sex_distribution(self):
+        print("=" * 60)
+        print("DISTRIBUIÇÃO POR SEXO")
+        print("=" * 60)
+        sex_dist = self.data['Sex'].value_counts()
+        for sex, count in sex_dist.items():
+            percentage = (count / len(self.data)) * 100
+            print(f"{sex:<10} | {count:3d} ({percentage:5.1f}%)")
+    
+    def function_9_country_analysis(self):
+        print("=" * 60)
+        print("OBSERVAÇÕES POR PAÍS/REGIÃO")
+        print("=" * 60)
+        country_dist = self.data['Country/Region'].value_counts()
+        for i, (country, count) in enumerate(country_dist.head(15).items(), 1):
+            percentage = (count / len(self.data)) * 100
+            print(f"{i:2d}. {country:<25} | {count:3d} ({percentage:5.1f}%)")
+    
+    def function_10_largest_specimens(self):
+        print("=" * 60)
+        print("MAIORES ESPÉCIMES (COMPRIMENTO)")
+        print("=" * 60)
+        largest = self.data.nlargest(10, 'Observed Length (m)')
+        for i, (idx, row) in enumerate(largest.iterrows(), 1):
+            print(f"{i:2d}. {row['Common Name']:<30} | {row['Observed Length (m)']:5.2f}m | {row['Country/Region']}")
+    
+    def function_11_heaviest_specimens(self):
+        print("=" * 60)
+        print("ESPÉCIMES MAIS PESADOS")
+        print("=" * 60)
+        heaviest = self.data.nlargest(10, 'Observed Weight (kg)')
+        for i, (idx, row) in enumerate(heaviest.iterrows(), 1):
+            print(f"{i:2d}. {row['Common Name']:<30} | {row['Observed Weight (kg)']:6.1f}kg | {row['Country/Region']}")
+    
+    def function_12_size_categories(self):
+        print("=" * 60)
+        print("CATEGORIZAÇÃO POR TAMANHO")
+        print("=" * 60)
+        
+        def categorize_size(length):
+            if pd.isna(length):
+                return 'Desconhecido'
+            elif length < 1.5:
+                return 'Pequeno (<1.5m)'
+            elif length < 3.0:
+                return 'Médio (1.5-3m)'
+            elif length < 4.5:
+                return 'Grande (3-4.5m)'
+            else:
+                return 'Muito Grande (>4.5m)'
+        
+        
+        temp_data = self.data.copy()
+        temp_data['Size_Category'] = temp_data['Observed Length (m)'].apply(categorize_size)
+        size_dist = temp_data['Size_Category'].value_counts()
+        
+        for category, count in size_dist.items():
+            percentage = (count / len(self.data)) * 100
+            print(f"{category:<20} | {count:3d} ({percentage:5.1f}%)")
+    
+    def function_13_yearly_observations(self):
+        print("=" * 60)
+        print("OBSERVAÇÕES POR ANO")
+        print("=" * 60)
+        try:
+            
+            dates = pd.to_datetime(self.data['Date of Observation'], format='%d-%m-%Y', errors='coerce')
+            yearly = dates.dt.year.value_counts().sort_index()
+            
+            for year, count in yearly.items():
+                if not pd.isna(year):
+                    print(f"{int(year)} | {'*' * (count // 5)}{count:3d} observações")
+        except (ValueError, TypeError) as e:
+            print(f"Erro na conversão de datas: {e}")
+    
+    def function_14_correlation_analysis(self):
+        print("=" * 60)
+        print("CORRELAÇÃO PESO vs COMPRIMENTO")
+        print("=" * 60)
+        
+
+        valid_data = self.data[['Observed Length (m)', 'Observed Weight (kg)']].dropna()
+        
+        if len(valid_data) > 1:
+            correlation = valid_data['Observed Length (m)'].corr(valid_data['Observed Weight (kg)'])
+            print(f"Coeficiente de correlação de Pearson: {correlation:.4f}")
+            
+            if correlation > 0.8:
+                print("Correlação muito forte e positiva")
+            elif correlation > 0.6:
+                print("Correlação forte e positiva")
+            elif correlation > 0.4:
+                print("Correlação moderada e positiva")
+            elif correlation > 0.2:
+                print("Correlação fraca e positiva")
+            else:
+                print("Correlação muito fraca")
+            
+            print(f"\nDados válidos para análise: {len(valid_data)}")
+        else:
+            print("Dados insuficientes para análise de correlação")
     
     
 def show_menu():
@@ -120,6 +222,13 @@ def show_menu():
         "5.  Distribuição por habitat",
         "6.  Status de conservação",
         "7.  Análise por classe etária",
+        "8.  Distribuição por sexo",
+        "9.  Análise por país/região",
+        "10. Maiores espécimes (comprimento)",
+        "11. Espécimes mais pesados",
+        "12. Categorização por tamanho",
+        "13. Observações por ano",
+        "14. Correlação peso vs comprimento",
     ]
     
     
@@ -152,6 +261,13 @@ def main():
         5: analyzer.function_5_habitat_distribution,
         6: analyzer.function_6_conservation_status,
         7: analyzer.function_7_age_class_analysis,
+        8: analyzer.function_8_sex_distribution,
+        9: analyzer.function_9_country_analysis,
+        10: analyzer.function_10_largest_specimens,
+        11: analyzer.function_11_heaviest_specimens,
+        12: analyzer.function_12_size_categories,
+        13: analyzer.function_13_yearly_observations,
+        14: analyzer.function_14_correlation_analysis,
         
     }
     
