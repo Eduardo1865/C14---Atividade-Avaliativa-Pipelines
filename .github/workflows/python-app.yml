@@ -1,5 +1,3 @@
-
-
 name: CI/CD Pipeline - Crocodile Analyzer
 
 on:
@@ -26,20 +24,20 @@ jobs:
     name: " Tests (Unit & Mock)"
     runs-on: ubuntu-latest
     steps:
-      - name:  Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name:  Set up Python ${{ env.PYTHON_VERSION }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name:  Cache pip dependencies
+      - name: Cache pip dependencies
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name:  Install testing dependencies and requirements
+      - name: Install testing dependencies and requirements
         run: |
           echo " Instalando software necessário via script..."
           python -m pip install --upgrade pip
@@ -52,7 +50,7 @@ jobs:
             echo "Instalando dependências essenciais..."
             pip install pandas
           fi
-      - name:  Run unit tests with coverage (20+ scenarios)
+      - name: Run unit tests with coverage (20+ scenarios)
         run: |
           echo " Executando testes unitários e mock..."
           python -m pytest test_crocodile_analyzer.py \
@@ -65,7 +63,7 @@ jobs:
             --html=test-reports/pytest-report.html \
             --self-contained-html \
             --junit-xml=test-reports/junit.xml
-      - name:  Generate test summary
+      - name: Generate test summary
         run: |
           echo " Gerando resumo dos testes..."
           echo "##  Test Results Summary" >> $GITHUB_STEP_SUMMARY
@@ -83,18 +81,17 @@ jobs:
           echo "- Relatório HTML de testes" >> $GITHUB_STEP_SUMMARY
           echo "- Relatório de cobertura (HTML + XML)" >> $GITHUB_STEP_SUMMARY
           echo "- Relatório JUnit XML" >> $GITHUB_STEP_SUMMARY
-      - name:  Upload test reports as artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload test reports as artifacts
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-reports
           path: |
             test-reports/
           retention-days: 30
-      - name:  Upload coverage to workflow summary
+      - name: Upload coverage to workflow summary
         if: always()
         run: |
           if [ -f test-reports/coverage.xml ]; then
             echo " **Coverage Report disponível nos artefatos**" >> $GITHUB_STEP_SUMMARY
           fi
-
