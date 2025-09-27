@@ -293,7 +293,7 @@ class CrocodileAnalyzer:
         
         print(f"DADOS GERAIS:")
         print(f"   Total de observações: {len(self.data)}")
-        print(f"   Espécies únicas: {self.data['Common Name'].nunique()}")
+        print(f"   Espécies únicas: {self.data['Scientific Name'].nunique()}")
         print(f"   Países/regiões: {self.data['Country/Region'].nunique()}")
         print(f"   Tipos de habitat: {self.data['Habitat Type'].nunique()}")
         print(f"   Observadores: {self.data['Observer Name'].nunique()}")
