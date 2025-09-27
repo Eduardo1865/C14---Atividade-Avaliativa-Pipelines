@@ -204,7 +204,119 @@ class CrocodileAnalyzer:
             print(f"\nDados válidos para análise: {len(valid_data)}")
         else:
             print("Dados insuficientes para análise de correlação")
+    def function_15_species_by_habitat(self):
+        print("=" * 60)
+        print("DIVERSIDADE DE ESPÉCIES POR HABITAT")
+        print("=" * 60)
+        
+        habitat_diversity = self.data.groupby('Habitat Type')['Common Name'].nunique().sort_values(ascending=False)
+        
+        for habitat, species_count in habitat_diversity.items():
+            print(f"{habitat:<25} | {species_count:2d} espécies diferentes")
     
+    def function_16_adult_vs_juvenile(self):
+        print("=" * 60)
+        print("COMPARAÇÃO ADULTO vs JUVENIL")
+        print("=" * 60)
+        
+        adults = self.data[self.data['Age Class'] == 'Adult']
+        juveniles = self.data[self.data['Age Class'] == 'Juvenile']
+        
+        print("ADULTOS:")
+        if len(adults) > 0:
+            adult_length = adults['Observed Length (m)'].dropna()
+            adult_weight = adults['Observed Weight (kg)'].dropna()
+            print(f"  Comprimento médio: {adult_length.mean():.2f}m")
+            print(f"  Peso médio: {adult_weight.mean():.2f}kg")
+            print(f"  Total: {len(adults)} observações")
+        
+        print("\nJUVENIS:")
+        if len(juveniles) > 0:
+            juv_length = juveniles['Observed Length (m)'].dropna()
+            juv_weight = juveniles['Observed Weight (kg)'].dropna()
+            print(f"  Comprimento médio: {juv_length.mean():.2f}m")
+            print(f"  Peso médio: {juv_weight.mean():.2f}kg")
+            print(f"  Total: {len(juveniles)} observações")
+    
+    def function_17_endangered_species(self):
+        print("=" * 60)
+        print("ESPÉCIES AMEAÇADAS DE EXTINÇÃO")
+        print("=" * 60)
+        
+        endangered_status = ['Critically Endangered', 'Endangered', 'Vulnerable']
+        endangered = self.data[self.data['Conservation Status'].isin(endangered_status)]
+        
+        if len(endangered) > 0:
+            endangered_species = endangered.groupby(['Common Name', 'Conservation Status']).size().reset_index(name='Count')
+            
+            for _, row in endangered_species.iterrows():
+                print(f"{row['Common Name']:<35} | {row['Conservation Status']:<20} | {row['Count']} obs.")
+        else:
+            print("Nenhuma espécie ameaçada encontrada no dataset")
+    
+    def function_18_observer_statistics(self):
+        print("=" * 60)
+        print("ESTATÍSTICAS DOS OBSERVADORES")
+        print("=" * 60)
+        
+        observer_stats = self.data['Observer Name'].value_counts()
+        print(f"Total de observadores: {len(observer_stats)}")
+        print(f"Observador mais ativo: {observer_stats.index[0]} ({observer_stats.iloc[0]} observações)")
+        print(f"Média de observações por observador: {observer_stats.mean():.1f}")
+        
+        print("\nTop 10 observadores mais ativos:")
+        for i, (observer, count) in enumerate(observer_stats.head(10).items(), 1):
+            print(f"{i:2d}. {observer:<25} | {count:3d} observações")
+    
+    def function_19_missing_data_analysis(self):
+        print("=" * 60)
+        print("ANÁLISE DE DADOS FALTANTES")
+        print("=" * 60)
+        
+        missing_data = self.data.isnull().sum()
+        total_rows = len(self.data)
+        
+        print(f"Total de registros: {total_rows}")
+        print("\nDados faltantes por coluna:")
+        
+        for column, missing_count in missing_data.items():
+            if missing_count > 0:
+                percentage = (missing_count / total_rows) * 100
+                print(f"{column:<30} | {missing_count:3d} ({percentage:5.1f}%)")
+            else:
+                print(f"{column:<30} | Completo")
+    
+    def function_20_summary_report(self):
+        print("=" * 80)
+        print("RELATÓRIO RESUMO COMPLETO DO DATASET")
+        print("=" * 80)
+        
+        print(f"DADOS GERAIS:")
+        print(f"   Total de observações: {len(self.data)}")
+        print(f"   Espécies únicas: {self.data['Common Name'].nunique()}")
+        print(f"   Países/regiões: {self.data['Country/Region'].nunique()}")
+        print(f"   Tipos de habitat: {self.data['Habitat Type'].nunique()}")
+        print(f"   Observadores: {self.data['Observer Name'].nunique()}")
+        
+        print(f"\nMEDIDAS FÍSICAS:")
+        length_stats = self.data['Observed Length (m)'].describe()
+        weight_stats = self.data['Observed Weight (kg)'].describe()
+        print(f"   Comprimento: {length_stats['min']:.2f}m - {length_stats['max']:.2f}m (média: {length_stats['mean']:.2f}m)")
+        print(f"   Peso: {weight_stats['min']:.1f}kg - {weight_stats['max']:.1f}kg (média: {weight_stats['mean']:.1f}kg)")
+        
+        print(f"\nCONSERVAÇÃO:")
+        conservation_counts = self.data['Conservation Status'].value_counts()
+        endangered = conservation_counts.get('Critically Endangered', 0) + conservation_counts.get('Endangered', 0)
+        print(f"   Espécies em perigo crítico/extinção: {endangered}")
+        print(f"   Status mais comum: {conservation_counts.index[0]} ({conservation_counts.iloc[0]} obs.)")
+        
+        print(f"\nQUALIDADE DOS DADOS:")
+        completeness = ((len(self.data) - self.data.isnull().sum()) / len(self.data) * 100)
+        avg_completeness = completeness.mean()
+        print(f"   Completude média: {avg_completeness:.1f}%")
+        print(f"   Coluna mais completa: {completeness.idxmax()} ({completeness.max():.1f}%)")
+        if completeness.min() < 100:
+            print(f"   Coluna com mais dados faltantes: {completeness.idxmin()} ({completeness.min():.1f}%)")
     
 def show_menu():
     """Exibe o menu principal."""
@@ -229,6 +341,12 @@ def show_menu():
         "12. Categorização por tamanho",
         "13. Observações por ano",
         "14. Correlação peso vs comprimento",
+        "15. Espécies por habitat",
+        "16. Comparação adulto vs juvenil",
+        "17. Espécies ameaçadas de extinção",
+        "18. Estatísticas dos observadores",
+        "19. Análise de dados faltantes",
+        "20. Relatório resumo completo"
     ]
     
     
@@ -268,7 +386,12 @@ def main():
         12: analyzer.function_12_size_categories,
         13: analyzer.function_13_yearly_observations,
         14: analyzer.function_14_correlation_analysis,
-        
+        15: analyzer.function_15_species_by_habitat,
+        16: analyzer.function_16_adult_vs_juvenile,
+        17: analyzer.function_17_endangered_species,
+        18: analyzer.function_18_observer_statistics,
+        19: analyzer.function_19_missing_data_analysis,
+        20: analyzer.function_20_summary_report       
     }
     
     
